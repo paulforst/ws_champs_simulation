@@ -1,0 +1,16 @@
+https://www.baseball-reference.com/teams/ANA/2002.shtml#team_batting::none
+https://www.baseball-reference.com/teams/FLA/2003.shtml#team_batting::none
+https://www.baseball-reference.com/teams/BOS/2004.shtml#team_batting::none
+https://www.baseball-reference.com/teams/CHW/2005.shtml#team_batting::none
+https://www.baseball-reference.com/teams/STL/2006.shtml#team_batting::none
+https://www.baseball-reference.com/teams/BOS/2007.shtml#team_batting::none
+https://www.baseball-reference.com/teams/PHI/2008.shtml#team_batting::none
+https://www.baseball-reference.com/teams/NYY/2009.shtml#team_batting::none
+https://www.baseball-reference.com/teams/SFG/2010.shtml#team_batting::none
+https://www.baseball-reference.com/teams/STL/2011.shtml#team_batting::none
+https://www.baseball-reference.com/teams/SFG/2012.shtml#team_batting::none
+https://www.baseball-reference.com/teams/BOS/2013.shtml#team_batting::none
+https://www.baseball-reference.com/teams/SFG/2014.shtml#team_batting::none
+https://www.baseball-reference.com/teams/KCR/2015.shtml#team_batting::none
+https://www.baseball-reference.com/teams/CHC/2016.shtml#team_batting::none
+https://www.baseball-reference.com/teams/HOU/2017.shtml#team_batting::none
