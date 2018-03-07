@@ -4,16 +4,22 @@ library(Lahman)
 library(readr)
 library(tidyverse)
 
-#Remove factors from teamID and lgID field in Batting data
-Batting <- as.data.frame(Batting, stringsAsFactors=FALSE)
-
 #Create a data frame with the last 16 World Series champions
 Season <- c(2001:2016)
-Winner <- c("ARI","ANA","FLA","BOS","CHW","STL","BOS","PHI","NYY","SFG","STL","SFG","BOS","SFG","KCR","CHC")
+Winner <- c("ARI","ANA","FLO","BOS","CHA","SLN","BOS","PHI","NYA","SFN","SLN","SFN","BOS","SFN","KCA","CHN")
 TeamId <- paste(Winner,Season,sep = "_")
-#WS Champs data frame
-Champs <- data.frame(TeamId,Season,Winner)
 
+#Remove factors from teamID and lgID field in Batting data
+Batting <- as.data.frame(Batting, stringsAsFactors=FALSE) %>% 
+      filter(Batting$yearID >= min(Season))
+
+Pitching <- as.data.frame(Pitching, stringsAsFactors=FALSE) %>% 
+      filter(Pitching$yearID >= min(Season))
+
+#WS Champs data frame
+Champs <- data.frame(TeamId,Season,Winner, stringsAsFactors = FALSE)
+
+Stats <- NULL
 
 #Loop to create the 16 teams
 for (i in seq_along(Champs$TeamId)){
@@ -21,7 +27,7 @@ for (i in seq_along(Champs$TeamId)){
             filter(yearID == Champs$Season[i]) %>% 
             filter(teamID == Champs$Winner[i]) 
       
-      Champs$TeamId[i] <- Stats[i]
+      #Champs$TeamId[i] <- Stats[i]
 }
 
 
