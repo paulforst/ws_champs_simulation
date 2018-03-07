@@ -4,13 +4,29 @@ library(Lahman)
 library(readr)
 library(tidyverse)
 
-Cubs_16 <- as.data.frame(Batting) %>% 
-      filter(yearID == "2016" && teamID == "CHN")
+#Remove factors from teamID and lgID field in Batting data
+Batting <- as.data.frame(Batting, stringsAsFactors=FALSE)
+
+#Create a data frame with the last 16 World Series champions
+Season <- c(2001:2016)
+Winner <- c("ARI","ANA","FLA","BOS","CHW","STL","BOS","PHI","NYY","SFG","STL","SFG","BOS","SFG","KCR","CHC")
+TeamId <- paste(Winner,Season,sep = "_")
+#WS Champs data frame
+Champs <- data.frame(TeamId,Season,Winner)
+
+
+#Loop to create the 16 teams
+for (i in seq_along(Champs$TeamId)){
+      Stats[i] <- Batting %>% 
+            filter(yearID == Champs$Season[i]) %>% 
+            filter(teamID == Champs$Winner[i]) 
+      
+      Champs$TeamId[i] <- Stats[i]
+}
 
 
 
-      #filter(Cubs_16$teamID == "CHN") %>% 
-      filter(Cubs_16$yearID == 2016)
+
 
 
 

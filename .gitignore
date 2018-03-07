@@ -32,3 +32,9 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 .Rproj.user
+<<<<<<< HEAD
+=======
+
+# RProj files to prevent conflicts
+*.RProj
+>>>>>>> 72618f4f3556e6481d3c39129d0bd7ba810494a9
