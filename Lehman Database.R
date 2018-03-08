@@ -4,9 +4,17 @@ library(Lahman)
 library(readr)
 library(tidyverse)
 
-#Create a data frame with the last 16 World Series champions
-Season <- c(2001:2016)
-Winner <- c("ARI","ANA","FLO","BOS","CHA","SLN","BOS","PHI","NYA","SFN","SLN","SFN","BOS","SFN","KCA","CHN")
+#Get information for the last X World Series champions
+num_champs <- 16
+
+Season <- c((max(Batting$yearID) - num_champs + 1):max(SeriesPost$yearID))
+Winner <- NULL
+for(i in Season){
+      temp <- SeriesPost %>% 
+            filter(yearID == i) %>% 
+            filter(round == 'WS')
+      Winner <- c(Winner, as.character(temp$teamIDwinner))
+}
 TeamId <- paste(Winner,Season,sep = "_")
 
 #Remove factors from teamID and lgID field in Batting data
@@ -20,7 +28,7 @@ Pitching <- as.data.frame(Pitching, stringsAsFactors=FALSE) %>%
 Champs <- data.frame(TeamId,Season,Winner, stringsAsFactors = FALSE)
 
 battingStats <- NULL
-pitchingingStats <- NULL
+pitchingStats <- NULL
 
 #Loop to create the 16 teams
 for (i in seq_along(Champs$TeamId)){
@@ -38,7 +46,7 @@ for (i in seq_along(Champs$TeamId)){
             arrange(-GS) %>% 
             top_n(wt = GS, 4)
       
-      pitchingingStats[[i]] <- temp
+      pitchingStats[[i]] <- temp
 }
 
 
@@ -196,9 +204,11 @@ outcomes %>% group_by(winner) %>% summarize(n = n(), pct = n/100)
 
 # Result: Away Team (Astros) win ~45.8% of the time...
 
-#------------------------------------
-# Function to simulate world series
-#------------------------------------
+#-----------------------------------------------
+# Function to simulate home and home round robin
+#-----------------------------------------------
+
+
 
 
 
