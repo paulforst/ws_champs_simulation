@@ -18,7 +18,7 @@ for(i in Season){
 }
 TeamId <- paste(Winner,Season,sep = "_")
 
-#Remove factors from teamID and lgID field in Batting data
+#Remove factors from teamID and lgID field in Batting and Pitching data
 Batting <- as.data.frame(Batting, stringsAsFactors=FALSE) %>% 
       filter(Batting$yearID >= min(Season))
 
@@ -27,6 +27,14 @@ Pitching <- as.data.frame(Pitching, stringsAsFactors=FALSE) %>%
 
 #WS Champs data frame
 Champs <- data.frame(TeamId,Season,Winner, stringsAsFactors = FALSE)
+
+#Determine pitching OBP for each year
+yearly_obp <- Pitching %>% 
+      mutate(obp = ((H + BB + HBP + IBB + SH + SF)/(BFP))) %>% 
+      group_by(yearID) %>% 
+      summarise(obp_avg = mean(obp))
+
+Pitching <- merge(Pitching, yearly_obp, by = "yearID")
 
 battingStats <- NULL
 pitchingStats <- NULL
@@ -46,7 +54,8 @@ for (i in seq_along(Champs$TeamId)){
             filter(yearID == Champs$Season[i]) %>% 
             filter(teamID == Champs$Winner[i]) %>% 
             arrange(-GS) %>% 
-            mutate(TeamId = paste(teamID,Season,sep = "_")) %>% 
+            mutate(obp = ((H + BB + HBP + IBB + SH + SF)/(BFP)), 
+                   TeamId = paste(teamID,Season,sep = "_"))%>% 
             top_n(wt = GS, 4)
       
       pitchingStats[[i]] <- temp
