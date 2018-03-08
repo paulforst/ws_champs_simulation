@@ -19,15 +19,26 @@ Pitching <- as.data.frame(Pitching, stringsAsFactors=FALSE) %>%
 #WS Champs data frame
 Champs <- data.frame(TeamId,Season,Winner, stringsAsFactors = FALSE)
 
-Stats <- NULL
+battingStats <- NULL
+pitchingingStats <- NULL
 
 #Loop to create the 16 teams
 for (i in seq_along(Champs$TeamId)){
-      Stats[i] <- Batting %>% 
+      temp <- Batting %>% 
             filter(yearID == Champs$Season[i]) %>% 
-            filter(teamID == Champs$Winner[i]) 
+            filter(teamID == Champs$Winner[i]) %>% 
+            arrange(-AB) %>% 
+            top_n(wt = AB, 9)
       
-      #Champs$TeamId[i] <- Stats[i]
+      battingStats[[i]] <- temp
+      
+      temp <- Pitching %>% 
+            filter(yearID == Champs$Season[i]) %>% 
+            filter(teamID == Champs$Winner[i]) %>% 
+            arrange(-GS) %>% 
+            top_n(wt = GS, 4)
+      
+      pitchingingStats[[i]] <- temp
 }
 
 
