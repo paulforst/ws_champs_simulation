@@ -5,6 +5,9 @@ library(readr)
 library(tidyverse)
 source("game_sim.R")
 
+#Set global options
+options(stringsAsFactors = FALSE)
+
 #Get information for the last X World Series champions
 num_champs <- 16
 
@@ -19,11 +22,13 @@ for(i in Season){
 TeamId <- paste(Winner,Season,sep = "_")
 
 #Remove factors from teamID and lgID field in Batting and Pitching data
-Batting <- as.data.frame(Batting, stringsAsFactors=FALSE) %>% 
-      filter(Batting$yearID >= min(Season))
+Batting <- as.data.frame(Batting, stringsAsFactors = FALSE) %>% 
+      filter(Batting$yearID >= min(Season)) %>% 
+      mutate(teamID = as.character(teamID))
 
 Pitching <- as.data.frame(Pitching, stringsAsFactors=FALSE) %>% 
-      filter(Pitching$yearID >= min(Season))
+      filter(Pitching$yearID >= min(Season)) %>% 
+      mutate(teamID = as.character(teamID))
 
 #WS Champs data frame
 Champs <- data.frame(TeamId,Season,Winner, stringsAsFactors = FALSE)
@@ -82,7 +87,7 @@ for(i in length(Season)){
             home_batting <- as.data.frame(battingStats[index])
             home_pitching <- as.data.frame(pitchingStats[index])
             
-            game_sim(away_batting, home_batting, away_pitching, home_pitching)
+            game_sim(away_batting, home_batting)#, away_pitching, home_pitching)
             
             
             

@@ -2,9 +2,6 @@
 #Fucntions to simulate a single game
 #############
 
-# initialize global vector of possible on-base states
-on_base_states <<- c(1, 2, 3, 4)
-
 # simulate half inning of a game
 half_inning <- function(team_bat, team_pitch = NULL) {
       outs <- 0
@@ -23,7 +20,7 @@ half_inning <- function(team_bat, team_pitch = NULL) {
             b1 <- hitter
             hitter <- 0
             i <- ifelse(i < 8, i + 1, 1)
-            batter <- team_df[i,]
+            batter <- team_bat[i,]
             at_bat_outcome <- rbinom(1, 1, batter$ob_pct)
             # if the at bat results in getting on base, how many bases?
             if(at_bat_outcome == 1){
@@ -57,6 +54,12 @@ half_inning <- function(team_bat, team_pitch = NULL) {
 # function to simulate an entire game
 game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_team_pitch = NULL){
       
+      # initialize global vector of possible on-base states
+      on_base_states <<- c(1, 2, 3, 4)
+      winner <<- NULL
+      lineup_pos <<- 0
+      extra_innings <<- 0
+      
       away_team <- away_team_bat$teamID[1]
       home_team <- home_team_bat$teamID[1]
       
@@ -75,39 +78,38 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
       home_hitting <- hitting %>% filter(teamID == home_team)
       
       # calculate variables for pitching
-      pitching <- rbind(away_team_pitch, home_team_pitch) %>%
-            mutate(on_base_count = H + BB,
-                   ob_pct = on_base_count/AB,
-                   on_base_1B = (on_base_count - `2B` - `3B` - `HR`),
-                   on_base_2B = (on_base_count - on_base_1B - `3B` - `HR`),
-                   on_base_3B = (on_base_count - on_base_1B - `2B` - `HR`),
-                   on_base_HR = (on_base_count - on_base_1B - `2B` - `3B`),
-                   obc = on_base_count) %>%
-            mutate_at(vars(starts_with("on_base")), funs(. / obc))
-      
-      away_pitching <- pitching %>% filter(team == away_team)
-      home_pitching <- pitching %>% filter(team == home_team)
-      
-      winner <- NULL
-      lineup_pos <- 0
-      extra_innings <- 0
+      if(!is.null(away_team_pitch) & !is.null(home_team_pitch)){
+            pitching <- rbind(away_team_pitch, home_team_pitch) %>%
+                  mutate(on_base_count = H + BB,
+                         ob_pct = on_base_count/AB,
+                         on_base_1B = (on_base_count - `2B` - `3B` - `HR`),
+                         on_base_2B = (on_base_count - on_base_1B - `3B` - `HR`),
+                         on_base_3B = (on_base_count - on_base_1B - `2B` - `HR`),
+                         on_base_HR = (on_base_count - on_base_1B - `2B` - `3B`),
+                         obc = on_base_count) %>%
+                  mutate_at(vars(starts_with("on_base")), funs(. / obc))
+            
+            away_pitching <- pitching %>% filter(team == away_team)
+            home_pitching <- pitching %>% filter(team == home_team)
+      }
+            
       # simulate away team score through 9 innings
       away_score <- 0
       for(i in 1:9){
-            away_score <- away_score + half_inning(away_team_df, home_team_pitch)
+            away_score <- away_score + half_inning(away_hitting, home_pitching)
       }
       away_lineup_pos <- lineup_pos
       lineup_pos <- 0
       # simulate home team score through 8 innings
       home_score <- 0
       for(i in 1:8){
-            home_score <- home_score + half_inning(home_team_df, away_team_pitch)
+            home_score <- home_score + half_inning(home_hitting, away_pitching)
       }
       # check if bottom of the 9th is played
       if(home_score > away_score){
             winner <- "Home Team"
       } else {
-            home_score <- home_score + half_inning(home_team_df)
+            home_score <- home_score + half_inning(home_hitting, away_pitching)
       }
       # need to handle ties (extra innings)
       if(home_score > away_score){
@@ -117,8 +119,8 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
       } else {
             tied <- TRUE
             while(tied == TRUE){
-                  away_score <- away_score + half_inning(away_team_df)
-                  home_score <- home_score + half_inning(home_team_df)
+                  away_score <- away_score + half_inning(away_hitting, home_pitching)
+                  home_score <- home_score + half_inning(home_hitting, away_pitching)
                   extra_innings <- extra_innings + 1
                   tied <- ifelse(away_score == home_score, TRUE, FALSE)
             }
