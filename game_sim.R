@@ -2,11 +2,7 @@
 #Fucntions to simulate a single game
 #############
 
-#----------------------------
-# build helper functions
-#----------------------------
-
-# initialize vector of possible on-base states
+# initialize global vector of possible on-base states
 on_base_states <<- c(1, 2, 3, 4)
 
 # simulate half inning of a game
@@ -68,10 +64,10 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
       hitting <- rbind(away_team_bat, home_team_bat) %>%
             mutate(on_base_count = H + BB,
                    ob_pct = on_base_count/AB,
-                   on_base_1B = (on_base_count - `2B` - `3B` - `HR`),
-                   on_base_2B = (on_base_count - on_base_1B - `3B` - `HR`),
-                   on_base_3B = (on_base_count - on_base_1B - `2B` - `HR`),
-                   on_base_HR = (on_base_count - on_base_1B - `2B` - `3B`),
+                   on_base_1B = (on_base_count - `X2B` - `X3B` - `HR`),
+                   on_base_2B = (on_base_count - on_base_1B - `X3B` - `HR`),
+                   on_base_3B = (on_base_count - on_base_1B - `X2B` - `HR`),
+                   on_base_HR = (on_base_count - on_base_1B - `X2B` - `X3B`),
                    obc = on_base_count) %>%
             mutate_at(vars(starts_with("on_base")), funs(. / obc))
       
