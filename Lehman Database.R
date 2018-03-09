@@ -50,7 +50,7 @@ for (i in seq_along(Champs$TeamId)){
             filter(yearID == Champs$Season[i]) %>% 
             filter(teamID == Champs$Winner[i]) %>% 
             arrange(-AB) %>% 
-            mutate(TeamId = paste(teamID,Season,sep = "_")) %>% 
+            mutate(TeamId = paste(teamID,yearID,sep = "_")) %>% 
             top_n(wt = AB, 9)
       
       battingStats[[i]] <- temp
@@ -60,7 +60,7 @@ for (i in seq_along(Champs$TeamId)){
             filter(teamID == Champs$Winner[i]) %>% 
             arrange(-GS) %>% 
             mutate(obp = ((H + BB + HBP + IBB + SH + SF)/(BFP)), 
-                   TeamId = paste(teamID,Season,sep = "_"))%>% 
+                   TeamId = paste(teamID,yearID,sep = "_"))%>% 
             top_n(wt = GS, 4)
       
       pitchingStats[[i]] <- temp
@@ -71,27 +71,36 @@ for (i in seq_along(Champs$TeamId)){
 # Function to simulate home and home round robin
 #-----------------------------------------------
 
+final_results <- NULL
+
 #Select team to be away and play all other teams
-for(i in length(Season)){
+for(i in 1:length(Season)){
       #Get away team and all opponents
       away <- TeamId[i]
       opponents <- TeamId[-i]
+      
+      print(i)
       
       #Gather away team stats
       away_batting <- as.data.frame(battingStats[i])
       away_pitching <- as.data.frame(pitchingStats[i])
       
+      team_results <- NULL
+      
       for(j in opponents) {
+            print(j)
             #Gather home team stats
             index <- which(TeamId == j)
             home_batting <- as.data.frame(battingStats[index])
             home_pitching <- as.data.frame(pitchingStats[index])
             
-            game_sim(away_batting, home_batting)#, away_pitching, home_pitching)
-            
+            temp <- game_sim(away_batting, home_batting)#, away_pitching, home_pitching)
+            team_results <- rbind(team_results, temp)
             
             
       }
+      
+      final_results <- rbind(final_results, team_results)
 }
 
 

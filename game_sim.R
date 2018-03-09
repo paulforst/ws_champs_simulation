@@ -60,8 +60,8 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
       lineup_pos <<- 0
       extra_innings <<- 0
       
-      away_team <- away_team_bat$teamID[1]
-      home_team <- home_team_bat$teamID[1]
+      away_team <- away_team_bat$TeamId[1]
+      home_team <- home_team_bat$TeamId[1]
       
       # calculate variables for batting
       hitting <- rbind(away_team_bat, home_team_bat) %>%
@@ -74,8 +74,8 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
                    obc = on_base_count) %>%
             mutate_at(vars(starts_with("on_base")), funs(. / obc))
       
-      away_hitting <- hitting %>% filter(teamID == away_team)
-      home_hitting <- hitting %>% filter(teamID == home_team)
+      away_hitting <- hitting %>% filter(TeamId == away_team)
+      home_hitting <- hitting %>% filter(TeamId == home_team)
       
       # calculate variables for pitching
       if(!is.null(away_team_pitch) & !is.null(home_team_pitch)){
@@ -89,8 +89,8 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
                          obc = on_base_count) %>%
                   mutate_at(vars(starts_with("on_base")), funs(. / obc))
             
-            away_pitching <- pitching %>% filter(team == away_team)
-            home_pitching <- pitching %>% filter(team == home_team)
+            away_pitching <- pitching %>% filter(TeamId == away_team)
+            home_pitching <- pitching %>% filter(TeamId == home_team)
       }
             
       # simulate away team score through 9 innings
@@ -107,15 +107,15 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
       }
       # check if bottom of the 9th is played
       if(home_score > away_score){
-            winner <- "Home Team"
+            winner <- home_team
       } else {
             home_score <- home_score + half_inning(home_hitting, away_pitching)
       }
       # need to handle ties (extra innings)
       if(home_score > away_score){
-            winner <- "Home Team"
+            winner <- home_team
       } else if(away_score > home_score){
-            winner <- "Away Team"
+            winner <- away_team
       } else {
             tied <- TRUE
             while(tied == TRUE){
@@ -124,7 +124,7 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
                   extra_innings <- extra_innings + 1
                   tied <- ifelse(away_score == home_score, TRUE, FALSE)
             }
-            winner <- ifelse(home_score > away_score, "Home Team", "Away Team")
+            winner <- ifelse(home_score > away_score, home_team, away_team)
       }
       total_innings <- 9 + extra_innings
       game_info <- data.frame(cbind(away_score, home_score, winner, total_innings, extra_innings))
