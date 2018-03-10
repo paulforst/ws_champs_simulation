@@ -66,7 +66,6 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
       # initialize global vector of possible on-base states
       on_base_states <<- c(1, 2, 3, 4)
       winner <<- NULL
-      loser <<- NULL
       lineup_pos <<- 0
       extra_innings <<- 0
       
@@ -102,19 +101,16 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
       
       # check if bottom of the 9th is played
       if(home_score > away_score){
-            winner <- home_team
-            loser <- away_team
+            winner <- "H"
       } else {
             home_score <- home_score + half_inning(home_hitting, away_pitching)
       }
       
       # need to handle ties (extra innings)
       if(home_score > away_score){
-            winner <- home_team
-            loser <- away_team
+            winner <- "H"
       } else if(away_score > home_score){
-            winner <- away_team
-            loser <- home_team
+            winner <- "A"
       } else {
             tied <- TRUE
             while(tied == TRUE){
@@ -124,14 +120,12 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
                   tied <- ifelse(away_score == home_score, TRUE, FALSE)
             }
             if(home_score > away_score) {
-                  winner <- home_team
-                  loser <- away_team
+                  winner <- "H"
             } else {
-                  winner <- away_team
-                  loser <- home_team
+                  winner <- "A"
             }
       }
       total_innings <- 9 + extra_innings
-      game_info <- data.frame(cbind(away_score, home_score, winner, loser, total_innings, extra_innings))
+      game_info <- data.frame(cbind(away_score, home_score, away_team, home_team, winner))
       return(game_info)
 }
