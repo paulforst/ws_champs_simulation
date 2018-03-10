@@ -21,8 +21,13 @@ half_inning <- function(team_bat, team_pitch = NULL) {
             hitter <- 0
             i <- ifelse(i < 8, i + 1, 1)
             batter <- team_bat[i,]
-            at_bat_outcome <- rbinom(1, 1, batter$ob_pct)
-            # if the at bat results in getting on base, how many bases?
+            
+            #Check for pitching factor and determine bating outcome
+            ifelse(is.null(team_pitch), 
+                   at_bat_outcome <- rbinom(1, 1, batter$ob_pct),
+                   at_bat_outcome <- rbinom(1, 1, batter$ob_pct * (1 + team_pitch)))
+
+            #if the at bat results in getting on base, how many bases?
             if(at_bat_outcome == 1){
                   base_outcome <- sample(on_base_states, 1, replace = T, prob = c(batter$on_base_1B,
                                                                                   batter$on_base_2B,
@@ -77,22 +82,6 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
       away_hitting <- hitting %>% filter(TeamId == away_team)
       home_hitting <- hitting %>% filter(TeamId == home_team)
       
-      # calculate variables for pitching
-      if(!is.null(away_team_pitch) & !is.null(home_team_pitch)){
-            pitching <- rbind(away_team_pitch, home_team_pitch) %>%
-                  mutate(on_base_count = H + BB,
-                         ob_pct = on_base_count/AB,
-                         on_base_1B = (on_base_count - `2B` - `3B` - `HR`),
-                         on_base_2B = (on_base_count - on_base_1B - `3B` - `HR`),
-                         on_base_3B = (on_base_count - on_base_1B - `2B` - `HR`),
-                         on_base_HR = (on_base_count - on_base_1B - `2B` - `3B`),
-                         obc = on_base_count) %>%
-                  mutate_at(vars(starts_with("on_base")), funs(. / obc))
-            
-            away_pitching <- pitching %>% filter(TeamId == away_team)
-            home_pitching <- pitching %>% filter(TeamId == home_team)
-      }
-            
       # simulate away team score through 9 innings
       away_score <- 0
       for(i in 1:9){
