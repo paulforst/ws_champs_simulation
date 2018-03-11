@@ -7,10 +7,8 @@ source("game_sim.R")
 
 #Set global options
 options(stringsAsFactors = FALSE)
-
 #Get information for the last X World Series champions
 num_champs <- 16
-
 Season <- c((max(Batting$yearID) - num_champs + 1):max(SeriesPost$yearID))
 Winner <- NULL
 for(i in Season){
@@ -20,30 +18,22 @@ for(i in Season){
       Winner <- c(Winner, as.character(temp$teamIDwinner))
 }
 TeamId <- paste(Winner,Season,sep = "_")
-
 #Remove factors from teamID and lgID field in Batting and Pitching data
 Batting <- as.data.frame(Batting, stringsAsFactors = FALSE) %>% 
       filter(Batting$yearID >= min(Season)) %>% 
       mutate(teamID = as.character(teamID))
-
 Pitching <- as.data.frame(Pitching, stringsAsFactors=FALSE) %>% 
       filter(Pitching$yearID >= min(Season)) %>% 
       mutate(teamID = as.character(teamID))
-
 #WS Champs data frame
 Champs <- data.frame(TeamId,Season,Winner, stringsAsFactors = FALSE)
-
 #Determine pitching OBP for each year
 yearly_obp <- Pitching %>% 
       mutate(obp = ((H + BB + HBP + IBB + SH + SF)/(BFP))) %>% 
       group_by(yearID) %>% 
-      summarise(obp_avg = mean(obp))
-
-Pitching <- merge(Pitching, yearly_obp, by = "yearID")
-
+      Pitching <- merge(Pitching, yearly_obp, by = "yearID")
 battingStats <- NULL
 pitchingStats <- NULL
-
 #Loop to create the 16 teams
 for (i in seq_along(Champs$TeamId)){
       temp <- Batting %>% 
@@ -60,11 +50,26 @@ for (i in seq_along(Champs$TeamId)){
             filter(teamID == Champs$Winner[i]) %>% 
             arrange(-GS) %>% 
             mutate(obp = ((H + BB + HBP + IBB + SH + SF)/(BFP)), 
-                   TeamId = paste(teamID,yearID,sep = "_"))%>% 
-            top_n(wt = GS, 4)
+                   TeamId = paste(teamID,yearID,sep = "_"),
+                   wt = ((BFP)/sum(BFP)))
       
       pitchingStats[[i]] <- temp
 }
+
+### Nathan's Added Code###
+# Calculating Pitching Factor
+LeaguePitchers <- NULL
+for(i in 1:length(pitchingStats)){
+      temp2 <- as.data.frame(pitchingStats[i])
+      LeaguePitchers <- rbind(LeaguePitchers,temp2)
+}
+AvePitch <- mean(LeaguePitchers$obp)
+LeaguePitchers$LgAve <- AvePitch
+LeaguePitchers$PitchFactor <- (LeaguePitchers$LgAve - LeaguePitchers$obp)/LeaguePitchers$LgAve
+LeaguePitchers$WPF <- LeaguePitchers$PitchFactor*LeaguePitchers$wt
+TeamPitch <- LeaguePitchers[,c(2,4,32,36)] %>% 
+      group_by(yearID, teamID, TeamId) %>% 
+      summarise(WPF = sum(WPF))
 
 
 #-----------------------------------------------
@@ -83,7 +88,7 @@ for(i in 1:length(Season)){
       
       #Gather away team stats
       away_batting <- as.data.frame(battingStats[i])
-      away_pitching <- as.data.frame(pitchingStats[i])
+      away_pitching <- as.numeric(TeamPitch[i,4])
       
       team_results <- NULL
       
@@ -92,9 +97,9 @@ for(i in 1:length(Season)){
             #Gather home team stats
             index <- which(TeamId == j)
             home_batting <- as.data.frame(battingStats[index])
-            home_pitching <- as.data.frame(pitchingStats[index])
+            home_pitching <- as.numeric(TeamPitch[index,4])
             
-            temp <- game_sim(away_batting, home_batting)#, away_pitching, home_pitching)
+            temp <- game_sim(away_batting, home_batting, away_pitching, home_pitching)
             team_results <- rbind(team_results, temp)
             
             
