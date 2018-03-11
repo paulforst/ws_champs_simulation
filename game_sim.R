@@ -23,12 +23,11 @@ half_inning <- function(team_bat, team_pitch = NULL) {
             batter <- team_bat[i,]
             
             #Check for pitching factor and determine batting percentage
-            #if(is.null(team_pitch)) {
+            if(is.null(team_pitch)) {
                   batting_chance <- batter$ob_pct
-            #} else {
-            #      batting_chance <- batter$ob_pct * (1 + team_pitch)
-            #}
-                  
+            } else {
+                  batting_chance <- batter$ob_pct * (1 + team_pitch)
+            }
             at_bat_outcome <- rbinom(1, 1, batting_chance)
 
             #if the at bat results in getting on base, how many bases?
@@ -89,21 +88,21 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
       # simulate away team score through 9 innings
       away_score <- 0
       for(i in 1:9){
-            away_score <- away_score + half_inning(away_hitting, home_pitching)
+            away_score <- away_score + half_inning(away_hitting, home_team_pitch)
       }
       away_lineup_pos <- lineup_pos
       lineup_pos <- 0
       # simulate home team score through 8 innings
       home_score <- 0
       for(i in 1:8){
-            home_score <- home_score + half_inning(home_hitting, away_pitching)
+            home_score <- home_score + half_inning(home_hitting, away_team_pitch)
       }
       
       # check if bottom of the 9th is played
       if(home_score > away_score){
             winner <- "H"
       } else {
-            home_score <- home_score + half_inning(home_hitting, away_pitching)
+            home_score <- home_score + half_inning(home_hitting, away_team_pitch)
       }
       
       # need to handle ties (extra innings)
@@ -114,8 +113,8 @@ game_sim <- function(away_team_bat, home_team_bat, away_team_pitch = NULL, home_
       } else {
             tied <- TRUE
             while(tied == TRUE){
-                  away_score <- away_score + half_inning(away_hitting, home_pitching)
-                  home_score <- home_score + half_inning(home_hitting, away_pitching)
+                  away_score <- away_score + half_inning(away_hitting, home_team_pitch)
+                  home_score <- home_score + half_inning(home_hitting, away_team_pitch)
                   extra_innings <- extra_innings + 1
                   tied <- ifelse(away_score == home_score, TRUE, FALSE)
             }
