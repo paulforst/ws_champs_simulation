@@ -84,8 +84,6 @@ for(i in 1:length(Season)){
       away <- TeamId[i]
       opponents <- TeamId[-i]
       
-      print(i)
-      
       #Gather away team stats
       away_batting <- as.data.frame(battingStats[i])
       away_pitching <- as.numeric(TeamPitch[i,4])
@@ -93,7 +91,6 @@ for(i in 1:length(Season)){
       team_results <- NULL
       
       for(j in opponents) {
-            print(j)
             #Gather home team stats
             index <- which(TeamId == j)
             home_batting <- as.data.frame(battingStats[index])
@@ -108,6 +105,38 @@ for(i in 1:length(Season)){
       final_results <- rbind(final_results, team_results)
 }
 
+#Coerce scores to numeric and build standings
+final_results$away_score <- as.numeric(final_results$away_score)
+final_results$home_score <- as.numeric(final_results$home_score)
+final_results <- rbind(
+      transmute(final_results,Team=home_team,Opponent=away_team,Home=TRUE,RunsFor=as.numeric(home_score),
+                RunsAgainst=away_score,Result=sign(RunsFor-RunsAgainst)),
+      transmute(final_results,Team=away_team,Opponent=home_team,Home=FALSE,RunsFor=as.numeric(away_score),
+                RunsAgainst=home_score,Result=sign(RunsFor-RunsAgainst)))
+standings <- group_by(final_results,Team) %>% 
+      summarize(Played=length(Team),
+                Won=sum(Result==1),
+                Lost=sum(Result==-1),
+                WinPct=(Won/Played),
+                Won10=sum(head(Result,10)==1),
+                Lost10=sum(head(Result,10)==-1),
+                HomeWon=sum(Result==1 & Home),
+                HomeLost=sum(Result==-1 & Home),
+                AwayWon=sum(Result==1 & !Home),
+                AwayLost=sum(Result==-1 & !Home),
+                RF=sum(RunsFor), RA=sum(RunsAgainst)
+                
+      )
+finaltable <- transmute(standings,
+                        Team,
+                        Record = paste0(Won,"-",Lost),
+                        HomeRec = paste0(HomeWon,"-",HomeLost),
+                        AwayRec = paste0(AwayWon,"-",AwayLost),
+                        WinPct = WinPct,
+                        RunsFor=RF,
+                        RunsAgainst=RA,
+                        Last10 = paste0(Won10,"-",Lost10)) %>% 
+      arrange(desc(WinPct))
 
 
 
