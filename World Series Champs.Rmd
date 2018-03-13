@@ -1,14 +1,28 @@
-# Data being pulled from The Lahmen Database
+---
+title: "World Series Champions Simulation"
+author: "Paul Forst, Ian O'Connor, Nathan Thomas"
+date: "March 14, 2018"
+output: html_document
+---
 
+```{r echo=FALSE, message=FALSE}
 library(Lahman)
 library(readr)
 library(tidyverse)
 source("game_sim.R")
 
-#Set global options
 options(stringsAsFactors = FALSE)
+```
 
-#Get information for the last X World Series champions
+# The Rundown
+
+#### We took the last 16 World Series champions and wanted to see which team is the best.  The batting and pitching
+#### statistics are included for all teams from their respective championship seasons. Each team will play each other
+#### team twice, once at home and once away. After the season is completed, the final standings will be compiled and 
+#### we can see which team was the best over the course of the season.
+
+```{r echo=FALSE, message=FALSE}
+# Get information for the last X World Series champions
 num_champs <- 16
 Season <- c((max(Batting$yearID) - num_champs + 1):max(SeriesPost$yearID))
 Winner <- NULL
@@ -83,8 +97,6 @@ TeamPitch <- LeaguePitchers[,c(2,4,32,36)] %>%
 TeamPitch$WPFAve <- mean(TeamPitch$WPF) 
 TeamPitch$WPFDiff <- TeamPitch$WPF - TeamPitch$WPFAve
 
-
-
 #-----------------------------------------------
 # Function to simulate home and home round robin
 #-----------------------------------------------
@@ -150,9 +162,12 @@ finaltable <- transmute(standings,
                         RunsAgainst=RA,
                         Last10 = paste0(Won10,"-",Lost10)) %>% 
       arrange(desc(WinPct))
+```
 
+# Final Results
 
+#### We can see which team had the best record over the course of the season, along with their home and away records, win percentage, runs scored and allowed, and their record over their last 10 games. 
 
-
-
-
+```{r eval=TRUE, echo=FALSE}
+finaltable
+```
