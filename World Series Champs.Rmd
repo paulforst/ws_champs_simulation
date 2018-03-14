@@ -18,8 +18,8 @@ options(stringsAsFactors = FALSE)
 
 #### We took the last 16 World Series champions and wanted to see which team is the best.  The batting and pitching
 #### statistics are included for all teams from their respective championship seasons. Each team will play each other
-#### team twice, once at home and once away. After the season is completed, the final standings will be compiled and 
-#### we can see which team was the best over the course of the season.
+#### team twice, once at home and once away. The simulation will simulate an entire season and cointinue to simulate 
+as many seasons as specified.  It will output the list of every season winner and their stats in that particular season.
 
 ```{r echo=FALSE, message=FALSE}
 # Get information for the last X World Series champions
@@ -79,11 +79,13 @@ for (i in seq_along(Champs$TeamId)){
       pitchingStats[[i]] <- temp
 }
 
+rm(Batting, Champs, Pitching, temp)
+
 # Calculating Pitching Factor
 LeaguePitchers <- NULL
 for(i in 1:length(pitchingStats)){
-      temp2 <- as.data.frame(pitchingStats[i])
-      LeaguePitchers <- rbind(LeaguePitchers,temp2)
+      temp <- as.data.frame(pitchingStats[i])
+      LeaguePitchers <- rbind(LeaguePitchers,temp)
 }
 
 AvePitch <- mean(LeaguePitchers$obp)
@@ -97,77 +99,109 @@ TeamPitch <- LeaguePitchers[,c(2,4,32,36)] %>%
 TeamPitch$WPFAve <- mean(TeamPitch$WPF) 
 TeamPitch$WPFDiff <- TeamPitch$WPF - TeamPitch$WPFAve
 
+rm(LeaguePitchers, temp)
+
 #-----------------------------------------------
 # Function to simulate home and home round robin
 #-----------------------------------------------
 
-final_results <- NULL
+#Set number of simulations to run
+n <- 100
+season_winners <- NULL
 
-#Select team to be away and play all other teams
-for(i in 1:length(Season)){
-      #Get away team and all opponents
-      away <- TeamId[i]
-      opponents <- TeamId[-i]
+# Create progress bar
+pb <- winProgressBar(title = "Running World Series Tournament: ", min = 0, max = n, width = 400)
+
+for(sims in 1:n) {
+      final_results <- NULL
       
-      #Gather away team stats
-      away_batting <- as.data.frame(battingStats[i])
-      away_pitching <- TeamPitch$WPFDiff[i]
-      
-      team_results <- NULL
-      
-      for(j in opponents) {
-            #Gather home team stats
-            index <- which(TeamId == j)
-            home_batting <- as.data.frame(battingStats[index])
-            home_pitching <- TeamPitch$WPFDiff[index]
+      #Select team to be away and play all other teams
+      for(i in 1:length(Season)){
+            #Get away team and all opponents
+            away <- TeamId[i]
+            opponents <- TeamId[-i]
             
-            temp <- game_sim(away_batting, home_batting, away_pitching, home_pitching)
-            team_results <- rbind(team_results, temp)
+            #Gather away team stats
+            away_batting <- as.data.frame(battingStats[i])
+            away_pitching <- TeamPitch$WPFDiff[i]
             
+            team_results <- NULL
             
+            for(j in opponents) {
+                  #Gather home team stats
+                  index <- which(TeamId == j)
+                  home_batting <- as.data.frame(battingStats[index])
+                  home_pitching <- TeamPitch$WPFDiff[index]
+                  
+                  temp <- game_sim(away_batting, home_batting, away_pitching, home_pitching)
+                  team_results <- rbind(team_results, temp)
+                  
+                  
+            }
+            
+            final_results <- rbind(final_results, team_results)
+            rm(away_batting, home_batting, away_pitching, home_pitching, team_results)
       }
       
-      final_results <- rbind(final_results, team_results)
+      #Coerce scores to numeric and build standings
+      final_results$away_score <- as.numeric(final_results$away_score)
+      final_results$home_score <- as.numeric(final_results$home_score)
+      final_results <- rbind(
+            transmute(final_results,Team=home_team,Opponent=away_team,Home=TRUE,RunsFor=as.numeric(home_score),
+                      RunsAgainst=away_score,Result=sign(RunsFor-RunsAgainst)),
+            transmute(final_results,Team=away_team,Opponent=home_team,Home=FALSE,RunsFor=as.numeric(away_score),
+                      RunsAgainst=home_score,Result=sign(RunsFor-RunsAgainst)))
+      standings <- group_by(final_results,Team) %>% 
+            summarize(Played=length(Team),
+                      Won=sum(Result==1),
+                      Lost=sum(Result==-1),
+                      WinPct=(Won/Played),
+                      Won10=sum(head(Result,10)==1),
+                      Lost10=sum(head(Result,10)==-1),
+                      HomeWon=sum(Result==1 & Home),
+                      HomeLost=sum(Result==-1 & Home),
+                      AwayWon=sum(Result==1 & !Home),
+                      AwayLost=sum(Result==-1 & !Home),
+                      RF=sum(RunsFor), RA=sum(RunsAgainst)
+                      
+            )
+      finaltable <- transmute(standings,
+                              Team,
+                              Record = paste0(Won,"-",Lost),
+                              HomeRec = paste0(HomeWon,"-",HomeLost),
+                              AwayRec = paste0(AwayWon,"-",AwayLost),
+                              WinPct = WinPct,
+                              RunsFor=RF,
+                              RunsAgainst=RA,
+                              Last10 = paste0(Won10,"-",Lost10)) %>% 
+            arrange(desc(WinPct))
+      
+      rm(final_results, standings)
+      
+      season_winners <- rbind(season_winners, finaltable[1,])
+      
+      # Update the progress bar
+      setWinProgressBar(pb, sims, title=paste("Running World Series Tournament: ",round(sims/n*100, 1),"% done"))
 }
 
-#Coerce scores to numeric and build standings
-final_results$away_score <- as.numeric(final_results$away_score)
-final_results$home_score <- as.numeric(final_results$home_score)
-final_results <- rbind(
-      transmute(final_results,Team=home_team,Opponent=away_team,Home=TRUE,RunsFor=as.numeric(home_score),
-                RunsAgainst=away_score,Result=sign(RunsFor-RunsAgainst)),
-      transmute(final_results,Team=away_team,Opponent=home_team,Home=FALSE,RunsFor=as.numeric(away_score),
-                RunsAgainst=home_score,Result=sign(RunsFor-RunsAgainst)))
-standings <- group_by(final_results,Team) %>% 
-      summarize(Played=length(Team),
-                Won=sum(Result==1),
-                Lost=sum(Result==-1),
-                WinPct=(Won/Played),
-                Won10=sum(head(Result,10)==1),
-                Lost10=sum(head(Result,10)==-1),
-                HomeWon=sum(Result==1 & Home),
-                HomeLost=sum(Result==-1 & Home),
-                AwayWon=sum(Result==1 & !Home),
-                AwayLost=sum(Result==-1 & !Home),
-                RF=sum(RunsFor), RA=sum(RunsAgainst)
-                
-      )
-finaltable <- transmute(standings,
-                        Team,
-                        Record = paste0(Won,"-",Lost),
-                        HomeRec = paste0(HomeWon,"-",HomeLost),
-                        AwayRec = paste0(AwayWon,"-",AwayLost),
-                        WinPct = WinPct,
-                        RunsFor=RF,
-                        RunsAgainst=RA,
-                        Last10 = paste0(Won10,"-",Lost10)) %>% 
-      arrange(desc(WinPct))
+rm(battingStats, pitchingStats)
+
+close(pb)
+
+season_winners
 ```
 
 # Final Results
 
-#### We can see which team had the best record over the course of the season, along with their home and away records, win percentage, runs scored and allowed, and their record over their last 10 games. 
+#### Once the simulation is finished running and we have each season's winner, we can aggregate these and output the winner, being the team that won the most simulations. 
 
 ```{r eval=TRUE, echo=FALSE}
-finaltable
+champion <- season_winners %>% 
+      group_by(Team) %>% 
+      summarise(wins = n(),
+                RunsScored = sum(RunsFor), 
+                RunsAllowed = sum(RunsAgainst)) %>% 
+      arrange(-wins, -RunsScored, RunsAllowed)
+
+print(paste0("Your champion is ", champion[1,1]))
 ```
