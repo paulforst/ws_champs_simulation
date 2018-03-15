@@ -11,6 +11,7 @@ output:
 library(Lahman)
 library(readr)
 library(tidyverse)
+library(knitr)
 source("game_sim.R")
 
 options(stringsAsFactors = FALSE)
@@ -18,10 +19,7 @@ options(stringsAsFactors = FALSE)
 
 # The Rundown
 
-#### We took the last 16 World Series champions and wanted to see which team is the best.  The batting and pitching
-#### statistics are included for all teams from their respective championship seasons. Each team will play each other
-#### team twice, once at home and once away. The simulation will simulate an entire season and cointinue to simulate 
-as many seasons as specified.  It will output the list of every season winner and their stats in that particular season.
+#### We took the last 16 World Series champions and wanted to see which team is the best.  The batting and pitching statistics are included for all teams from their respective championship seasons. Each team will play each other team twice, once at home and once away. The simulation will simulate an entire season and cointinue to simulate as many seasons as specified.  It will output the list of every season winner and their stats in that particular season.
 
 ```{r echo=FALSE, message=FALSE}
 # Get information for the last X World Series champions
@@ -190,7 +188,7 @@ rm(battingStats, pitchingStats)
 
 close(pb)
 
-season_winners
+kable(season_winners, caption = "Single Season Results")
 ```
 
 # Final Results
@@ -200,10 +198,17 @@ season_winners
 ```{r eval=TRUE, echo=FALSE}
 champion <- season_winners %>% 
       group_by(Team) %>% 
-      summarise(wins = n(),
+      summarise(SeasonWins = n(),
                 RunsScored = sum(RunsFor), 
                 RunsAllowed = sum(RunsAgainst)) %>% 
-      arrange(-wins, -RunsScored, RunsAllowed)
+      arrange(-SeasonWins, -RunsScored, RunsAllowed)
 
-print(paste0("Your champion is ", champion[1,1]))
+```
+
+# Season Champions
+
+```{r echo = FALSE}
+kable(champion, caption = "Season Champions")
+
+print(paste0("Your overall champion is ", champion[1,1]))
 ```
