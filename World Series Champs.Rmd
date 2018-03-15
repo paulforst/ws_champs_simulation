@@ -9,6 +9,7 @@ output: html_document
 library(Lahman)
 library(readr)
 library(tidyverse)
+library(knitr)
 source("game_sim.R")
 
 options(stringsAsFactors = FALSE)
@@ -19,7 +20,7 @@ options(stringsAsFactors = FALSE)
 #### We took the last 16 World Series champions and wanted to see which team is the best.  The batting and pitching
 #### statistics are included for all teams from their respective championship seasons. Each team will play each other
 #### team twice, once at home and once away. The simulation will simulate an entire season and cointinue to simulate 
-as many seasons as specified.  It will output the list of every season winner and their stats in that particular season.
+#### as many seasons as specified.  It will output the list of every season winner and their stats in that particular season.
 
 ```{r echo=FALSE, message=FALSE}
 # Get information for the last X World Series champions
@@ -106,7 +107,7 @@ rm(LeaguePitchers, temp)
 #-----------------------------------------------
 
 #Set number of simulations to run
-n <- 100
+n <- 10
 season_winners <- NULL
 
 # Create progress bar
@@ -188,7 +189,7 @@ rm(battingStats, pitchingStats)
 
 close(pb)
 
-season_winners
+kable(season_winners)
 ```
 
 # Final Results
