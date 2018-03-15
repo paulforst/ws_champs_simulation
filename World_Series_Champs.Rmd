@@ -113,7 +113,7 @@ rm(LeaguePitchers, temp)
 #-----------------------------------------------
 
 #Set number of simulations to run
-n <- 10
+n <- 100
 season_winners <- NULL
 
 # Create progress bar
