@@ -2,7 +2,9 @@
 title: "World Series Champions Simulation"
 author: "Paul Forst, Ian O'Connor, Nathan Thomas"
 date: "March 14, 2018"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r echo=FALSE, message=FALSE}
@@ -106,7 +108,7 @@ rm(LeaguePitchers, temp)
 #-----------------------------------------------
 
 #Set number of simulations to run
-n <- 100
+n <- 10
 season_winners <- NULL
 
 # Create progress bar

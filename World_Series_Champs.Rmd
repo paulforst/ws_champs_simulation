@@ -4,6 +4,7 @@ author: "Paul Forst, Ian O'Connor, Nathan Thomas"
 date: "March 14, 2018"
 output:
   pdf_document: default
+  word_document: default
   html_document: default
 ---
 
@@ -18,10 +19,14 @@ options(stringsAsFactors = FALSE)
 
 # The Rundown
 
-#### We took the last 16 World Series champions and wanted to see which team is the best.  The batting and pitching
-#### statistics are included for all teams from their respective championship seasons. Each team will play each other
-#### team twice, once at home and once away. The simulation will simulate an entire season and cointinue to simulate 
-as many seasons as specified.  It will output the list of every season winner and their stats in that particular season.
+This simulation collected statistics for the 16 Major League Baseball World Series champions from 2001 through 2016, created a game simulation and paired the teams up in games to see which team is the best.  The batting and pitching statistics are included for all teams from their respective championship seasons. 
+
+To determine a true champion, the 16 teams will play a simulated season, playing all other teams twice, once at home and once away, in a round-robin format season. The simulation will run for 100 "seasons" and output a list of every season winner and their record in that particular season.
+
+Probabilities for the simulation were based on modified "on-base" percentages which calculated the probability that any given batter would obtain one base, two bases, three bases, or four bases in an at bat or get out.  The top nine batters from each team were used to create a lineup.  These nine batters were selected by choosing the top 9 with the highest at bats through their respective regular season.  Pitching was factored into the simulation by calculating a similar "on-base" percentage, whereby producing an "apples-to-apples" environment for the simulation.  The on-base percentages were then adjusted by the average on-base percentage for pitchers on all 16 teams rosters.  This adjusted score was then weighted by the number of batters the pitcher faced throughout the season.  The scores were then aggregated creating a new base score for the entire pitching staff.  The new base scores were averaged and then the average was reduced from the base score creating a factor.  Negative factors meant that a pitching staff was very good and would have a negative effect on the hitters probabilities, while positive factors meant that a pitching staff was not as good and hitters would fare much better against the pitching staff.  
+
+During the game simulation, the factor for the opposing pitching staff was multiplied against the hitting team's on-base probabilities.  The simulation for each game is then run.
+
 
 ```{r echo=FALSE, message=FALSE}
 # Get information for the last X World Series champions
@@ -108,7 +113,7 @@ rm(LeaguePitchers, temp)
 #-----------------------------------------------
 
 #Set number of simulations to run
-n <- 100
+n <- 10
 season_winners <- NULL
 
 # Create progress bar
@@ -195,7 +200,7 @@ season_winners
 
 # Final Results
 
-#### Once the simulation is finished running and we have each season's winner, we can aggregate these and output the winner, being the team that won the most simulations. 
+Once the simulation is finished running and we have each season's winner, we can aggregate these and output the overall champion, or the team that won the most simulations. 
 
 ```{r eval=TRUE, echo=FALSE}
 champion <- season_winners %>% 
